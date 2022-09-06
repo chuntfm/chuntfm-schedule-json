@@ -4,6 +4,7 @@ import icalendar
 import requests
 import re
 import sys
+import pytz
 
 def remove_html_tags(text):
     """Remove html tags from a string"""
@@ -84,9 +85,9 @@ def main(debug = False):
             'uid': event.get('uid'),
             'startTimestamp': event.get('dtstart').dt.isoformat(),
             'endTimestamp': event.get('dtend').dt.isoformat(),
-            'dateBST': event.get('dtstart').dt.astimezone().strftime('%Y-%m-%d'),
-            'startTimeBST': event.get('dtstart').dt.astimezone().strftime('%H:%M'),
-            'endTimeBST': event.get('dtend').dt.astimezone().strftime('%H:%M'),
+            'dateUK': event.get('dtstart').dt.astimezone(tz=pytz.timezone('Europe/London')).strftime('%Y-%m-%d'),
+            'startTimeUK': event.get('dtstart').dt.astimezone(tz=pytz.timezone('Europe/London')).strftime('%H:%M'),
+            'endTimeUK': event.get('dtend').dt.astimezone(tz=pytz.timezone('Europe/London')).strftime('%H:%M'),
             'title': event.get('summary', '').strip(),
             'description': description.strip(),
             'location': event.get('location'),
