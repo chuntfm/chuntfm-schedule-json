@@ -38,13 +38,13 @@ def main(debug = False):
         show_title = current['song']
         show_date = None
 
-        title_re = re.search('(.*)@\s*(chuntfm)\s*(.*)', show_title, re.IGNORECASE)
+        title_re = re.search('(.*)@\s*(chuntfm)\s*(.*)', show_title.strip(), re.IGNORECASE)
 
         if title_re is not None:
             show_title = title_re.group(1)
             show_date = title_re.group(3)
 
-        restream['current']['show_title'] = show_title
+        restream['current']['show_title'] = show_title.strip()
         restream['current']['description'] = None
         restream['current']['show_date'] = show_date
         restream['current']['on_air_timestamp'] = current['on_air_timestamp']
