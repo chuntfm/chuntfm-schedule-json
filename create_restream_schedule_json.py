@@ -38,7 +38,7 @@ def main(debug = False):
         show_title = current['song']
         show_date = None
 
-        title_re = re.search('(.*)@\s*(chuntfm)\s*(.*)', show_title.strip(), re.IGNORECASE)
+        title_re = re.search('(.*)@*\s*(chunt\s*fm)\s*(.*)', show_title.strip(), re.IGNORECASE)
 
         if title_re is not None:
             show_title = title_re.group(1)
