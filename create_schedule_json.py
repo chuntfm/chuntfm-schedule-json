@@ -13,6 +13,14 @@ def remove_html_tags(text):
     return re.sub(clean, '', text)
 
 
+def fix_html(text):
+    """Fix html tags"""
+    text = text.replace('&lt;', '<')
+    text = text.replace('&gt;', '>')
+
+    return text
+
+
 
 def main(debug = False):
 
@@ -49,6 +57,7 @@ def main(debug = False):
         description = re.sub('This event contains.*', '', description, flags=re.IGNORECASE|re.MULTILINE|re.DOTALL)
         description = re.sub('This event has.*', '', description, flags=re.IGNORECASE|re.MULTILINE|re.DOTALL)
 
+        description = fix_html(description)
 
         try:
             partstat = event.get('attendee').params.get('PARTSTAT')
