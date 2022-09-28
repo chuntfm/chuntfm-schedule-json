@@ -35,19 +35,24 @@ def main(debug = False):
 
         restream['current'] = dict()
 
-        show_title = current['song']
-        show_date = None
+        try:
 
-        title_re = re.search('(.*?)@*\s*(chunt\s*fm)\s*(.*)', show_title.strip(), re.IGNORECASE)
+            show_title = current['song']
+            show_date = None
 
-        if title_re is not None:
-            show_title = title_re.group(1)
-            show_date = title_re.group(3)
+            title_re = re.search('(.*?)@*\s*(chunt\s*fm)\s*(.*)', show_title.strip(), re.IGNORECASE)
 
-        restream['current']['show_title'] = show_title.strip()
-        restream['current']['description'] = None
-        restream['current']['show_date'] = show_date
-        restream['current']['on_air_timestamp'] = current['on_air_timestamp']
+            if title_re is not None:
+                show_title = title_re.group(1)
+                show_date = title_re.group(3)
+
+            restream['current']['show_title'] = show_title.strip()
+            restream['current']['description'] = None
+            restream['current']['show_date'] = show_date
+            restream['current']['on_air_timestamp'] = current['on_air_timestamp']
+
+        except:
+            pass
 
 
     if args.input_next is not None:
@@ -57,9 +62,15 @@ def main(debug = False):
             next = json.load(open(args.input_next, 'rb'))
 
         restream['next'] = dict()
+        
+        try:
 
-        restream['next']['show_title'] = next['song']
-        restream['next']['description'] = None
+            restream['next']['show_title'] = next['song']
+            restream['next']['description'] = None
+
+        except:
+
+            pass
 
 
     # write out json file
