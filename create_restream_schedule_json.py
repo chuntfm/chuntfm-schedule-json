@@ -62,7 +62,7 @@ def main(debug = False):
             next = json.load(open(args.input_next, 'rb'))
 
         restream['next'] = dict()
-        
+
         try:
 
             restream['next']['show_title'] = next['song']

@@ -52,6 +52,8 @@ def main(debug = False):
         if description is None:
             description = ''
 
+        description = re.sub('Join with Google Meet.*', '', description, flags=re.IGNORECASE|re.MULTILINE|re.DOTALL)
+        description = re.sub('^.*Google Meet.*', '', description, flags=re.IGNORECASE|re.MULTILINE|re.DOTALL)
         description = re.sub('Dieser Termin enthält einen Videoanruf.*', '', description, flags=re.IGNORECASE|re.MULTILINE|re.DOTALL)
         description = re.sub('Teilnehmen.*', '', description, flags=re.IGNORECASE|re.MULTILINE|re.DOTALL)
         description = re.sub('This event contains.*', '', description, flags=re.IGNORECASE|re.MULTILINE|re.DOTALL)
