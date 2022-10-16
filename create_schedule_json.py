@@ -53,9 +53,9 @@ def main(debug = False):
             description = ''
 
         description = re.sub('Join with Google Meet.*', '', description, flags=re.IGNORECASE|re.MULTILINE|re.DOTALL)
-        description = re.sub('^.*skype.*', '', description, flags=re.IGNORECASE|re.MULTILINE|re.DOTALL)
-        description = re.sub('^.*google\.com.*', '', description, flags=re.IGNORECASE|re.MULTILINE|re.DOTALL)
-        description = re.sub('^.*Google Meet.*', '', description, flags=re.IGNORECASE|re.MULTILINE|re.DOTALL)
+        description = re.sub('^.*skype[.\n\r\s]*', '', description, flags=re.IGNORECASE|re.MULTILINE)
+        description = re.sub('^.*google\.com[.\n\r\s]*', '', description, flags=re.IGNORECASE|re.MULTILINE)
+        description = re.sub('^.*Google Meet[.\n\r\s]*', '', description, flags=re.IGNORECASE|re.MULTILINE)
         description = re.sub('Dieser Termin enthält einen Videoanruf.*', '', description, flags=re.IGNORECASE|re.MULTILINE|re.DOTALL)
         description = re.sub('Teilnehmen.*', '', description, flags=re.IGNORECASE|re.MULTILINE|re.DOTALL)
         description = re.sub('This event contains.*', '', description, flags=re.IGNORECASE|re.MULTILINE|re.DOTALL)
