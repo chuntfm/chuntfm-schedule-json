@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import json
 import icalendar
 import requests
@@ -97,22 +98,42 @@ def main(debug = False):
             except:
                 pass
 
+        try:
+            startDateUK =  event.get('dtstart').dt.astimezone(tz=pytz.timezone('Europe/London'))
+        except: # all day events
+            startDateUK = datetime.datetime.combine(event.get('dtstart').dt, datetime.datetime.min.time())
+            # Now the date can be localized
+            startDateUK = pytz.timezone("Europe/London").localize(startDateUK, is_dst=None)
+
+        try:
+            endDateUK =  event.get('dtend').dt.astimezone(tz=pytz.timezone('Europe/London'))
+
+        except: # all day events
+            endDateUK = datetime.datetime.combine(event.get('dtend').dt, datetime.datetime.min.time())
+            # Now the date can be localized
+            endDateUK = pytz.timezone("Europe/London").localize(endDateUK, is_dst=None)
+
+            if endDateUK.date() != startDateUK.date():
+                endDateUK = endDateUK - datetime.timedelta(seconds=1)
+                if endDateUK.date() != startDateUK.date():
+                    print('Warning: multi day events not yet supported')
+                    pass
 
         new_event ={
-            'uid': event.get('uid'),
-            'startTimestamp': event.get('dtstart').dt.isoformat(),
-            'endTimestamp': event.get('dtend').dt.isoformat(),
-            'dateUK': event.get('dtstart').dt.astimezone(tz=pytz.timezone('Europe/London')).strftime('%Y-%m-%d'),
-            'startTimeUK': event.get('dtstart').dt.astimezone(tz=pytz.timezone('Europe/London')).strftime('%H:%M'),
-            'endTimeUK': event.get('dtend').dt.astimezone(tz=pytz.timezone('Europe/London')).strftime('%H:%M'),
-            'title': event.get('summary', '').strip(),
-            'description': description.strip(),
-            'location': event.get('location'),
-            'lastModified': event.get('last-modified').dt.isoformat(),
-            'status': event.get('status'),
-            'invitationStatus': partstat,
-            'url': event.get('url'),
-        }
+        'uid': event.get('uid'),
+        'startTimestamp': event.get('dtstart').dt.isoformat(),
+        'endTimestamp': event.get('dtend').dt.isoformat(),
+        'dateUK': startDateUK.strftime('%Y-%m-%d'),
+        'startTimeUK': startDateUK.strftime('%H:%M'),
+        'endTimeUK': endDateUK.strftime('%H:%M'),
+        'title': event.get('summary', '').strip(),
+        'description': description.strip(),
+        'location': event.get('location'),
+        'lastModified': event.get('last-modified').dt.isoformat(),
+        'status': event.get('status'),
+        'invitationStatus': partstat,
+        'url': event.get('url'),
+    }
 
         new_event.update(description_json)
 
