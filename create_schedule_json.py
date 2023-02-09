@@ -57,10 +57,10 @@ def main(debug = False):
     raw_events = [e for e in cal.walk()]
 
     # count UIDs occurences in raw_events
-    c = Counter([e['UID'] for e in raw_events])
+    c = Counter([e['UID'] for e in raw_events if 'UID' in e.keys()])
 
     # non-recurring events without constraint + recurring events 3 months into to the future
-    raw_events = [e for e in raw_events if c[e['UID']] == 1] + [e for e in raw_recurring_events if c[e['UID']] > 1]
+    raw_events = [e for e in raw_events if 'UID' in e.keys() and c[e['UID']] == 1] + [e for e in raw_recurring_events if 'UID' in e.keys() and c[e['UID']] > 1]
 
 
     for event in raw_events:
