@@ -2,10 +2,12 @@ import argparse
 import datetime
 import json
 import icalendar
+import recurring_ical_events
 import requests
 import re
 import sys
 import pytz
+from collections import Counter
 
 def remove_html_tags(text):
     """Remove html tags from a string"""
@@ -20,6 +22,8 @@ def fix_html(text):
     text = text.replace('&gt;', '>')
 
     return text
+
+
 
 
 
@@ -43,9 +47,13 @@ def main(debug = False):
 
     events = []
 
-    for event in cal.walk('vevent'):
+    raw_events = recurring_ical_events.of(cal).between((2022,3,14), datetime.datetime.now(pytz.utc) + datetime.timedelta(days=100))
+
+    # count UIDs occurences in raw_events
+    c = Counter([e['UID'] for e in raw_events])
 
 
+    for event in raw_events:
 
         # clean description
         description = event.get('description')
@@ -126,6 +134,7 @@ def main(debug = False):
         'dateUK': startDateUK.strftime('%Y-%m-%d'),
         'startTimeUK': startDateUK.strftime('%H:%M'),
         'endTimeUK': endDateUK.strftime('%H:%M'),
+        'recurring': c[event.get('uid')] > 1,
         'title': event.get('summary', '').strip(),
         'description': description.strip(),
         'location': event.get('location'),
@@ -138,6 +147,7 @@ def main(debug = False):
         new_event.update(description_json)
 
         events.append(new_event)
+
 
     # sort by startTimestamp descending
     events = sorted(events, key=lambda k: k['startTimestamp'], reverse=False)
