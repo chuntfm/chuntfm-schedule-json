@@ -45,12 +45,22 @@ def main(debug = False):
     else:
         cal = icalendar.Calendar.from_ical(open(args.input, 'rb').read())
 
+
+
+
     events = []
 
-    raw_events = recurring_ical_events.of(cal).between((2022,3,14), datetime.datetime.now(pytz.utc) + datetime.timedelta(days=100))
+    # get recurring events for the next three months
+    raw_recurring_events = recurring_ical_events.of(cal).between((2022,3,14), datetime.datetime.now(pytz.utc) + datetime.timedelta(days=100))
+
+    # get ALL events
+    raw_events = [e for e in cal.walk()]
 
     # count UIDs occurences in raw_events
     c = Counter([e['UID'] for e in raw_events])
+
+    # non-recurring events without constraint + recurring events 3 months into to the future
+    raw_events = [e for e in raw_events if c[e['UID']] == 1] + [e for e in raw_recurring_events if c[e['UID']] > 1]
 
 
     for event in raw_events:
