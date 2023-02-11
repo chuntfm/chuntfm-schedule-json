@@ -51,7 +51,7 @@ def main(debug = False):
     events = []
 
     # get recurring events for the next three months
-    raw_recurring_events = recurring_ical_events.of(cal).between((2022,3,14), datetime.datetime.now(pytz.utc) + datetime.timedelta(days=100))
+    raw_recurring_events = recurring_ical_events.of(cal, components=["VEVENT"]).between((2022,3,14), datetime.datetime.now(pytz.utc) + datetime.timedelta(days=100))
 
     # get ALL events
     raw_events = [e for e in cal.walk()]
@@ -119,9 +119,12 @@ def main(debug = False):
         try:
             startDateUK =  event.get('dtstart').dt.astimezone(tz=pytz.timezone('Europe/London'))
         except: # all day events
-            startDateUK = datetime.datetime.combine(event.get('dtstart').dt, datetime.datetime.min.time())
+            try:
+                startDateUK = datetime.datetime.combine(event.get('dtstart').dt, datetime.datetime.min.time())
+                startDateUK = pytz.timezone("Europe/London").localize(startDateUK, is_dst=None)
+            except:
+                continue
             # Now the date can be localized
-            startDateUK = pytz.timezone("Europe/London").localize(startDateUK, is_dst=None)
 
         try:
             endDateUK =  event.get('dtend').dt.astimezone(tz=pytz.timezone('Europe/London'))
