@@ -142,8 +142,10 @@ def main(debug = False):
 
         new_event ={
         'uid': event.get('uid'),
-        'startTimestamp': event.get('dtstart').dt.isoformat(),
-        'endTimestamp': event.get('dtend').dt.isoformat(),
+        'startTimestampUTC': event.get('dtstart').dt.astimezone(pytz.utc).isoformat(),
+        'endTimestampUTC': event.get('dtend').dt.astimezone(pytz.utc).isoformat(),
+        'startTimestamp': event.get('dtstart').dt.astimezone(pytz.timezone('Europe/London')).isoformat(),
+        'endTimestamp': event.get('dtend').dt.astimezone(pytz.timezone('Europe/London')).isoformat(),
         'dateUK': startDateUK.strftime('%Y-%m-%d'),
         'startTimeUK': startDateUK.strftime('%H:%M'),
         'endTimeUK': endDateUK.strftime('%H:%M'),
