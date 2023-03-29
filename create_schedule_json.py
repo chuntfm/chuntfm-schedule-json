@@ -51,7 +51,7 @@ def main(debug = False):
     events = []
 
     # get recurring events for the next three months
-    raw_recurring_events = recurring_ical_events.of(cal, components=["VEVENT"]).between((2022,3,14), datetime.datetime.now(pytz.utc) + datetime.timedelta(days=100))
+    raw_recurring_events = recurring_ical_events.of(cal, components=["VEVENT"]).between((2022,3,14), datetime.datetime.now(pytz.utc) + datetime.timedelta(days=31))
 
     # get ALL events
     raw_events = [e for e in cal.walk()]
