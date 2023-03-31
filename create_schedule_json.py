@@ -65,6 +65,10 @@ def main(debug = False):
 
     for event in raw_events:
 
+        # check whether event is actually an event
+        if event.name != 'VEVENT':
+            continue
+
         # clean description
         description = event.get('description')
 
@@ -117,47 +121,77 @@ def main(debug = False):
                 pass
 
         try:
+            startTimestampUTC =  event.get('dtstart').dt.astimezone(pytz.utc)
             startDateUK =  event.get('dtstart').dt.astimezone(tz=pytz.timezone('Europe/London'))
         except: # all day events
             try:
+                startTimestampUTC = datetime.datetime.combine(event.get('dtstart').dt, datetime.datetime.min.time())
+                startTimestampUTC = pytz.timezone('UTC').localize(startTimestampUTC) # 
+
+
                 startDateUK = datetime.datetime.combine(event.get('dtstart').dt, datetime.datetime.min.time())
                 startDateUK = pytz.timezone("Europe/London").localize(startDateUK, is_dst=None)
-            except:
+            except Exception as e:
+                print('Error parsing event: ' + event.get('uid'))
+                print(e)
                 continue
             # Now the date can be localized
 
         try:
+            endTimestampUTC = event.get('dtend').dt.astimezone(pytz.utc)
             endDateUK =  event.get('dtend').dt.astimezone(tz=pytz.timezone('Europe/London'))
 
         except: # all day events
-            endDateUK = datetime.datetime.combine(event.get('dtend').dt, datetime.datetime.min.time())
-            # Now the date can be localized
-            endDateUK = pytz.timezone("Europe/London").localize(endDateUK, is_dst=None)
 
-            if endDateUK.date() != startDateUK.date():
-                endDateUK = endDateUK - datetime.timedelta(seconds=1)
+            try:
+
+                endTimestampUTC = datetime.datetime.combine(event.get('dtend').dt, datetime.datetime.min.time())
+                endTimestampUTC = pytz.timezone('UTC').localize(endTimestampUTC)
+
+                if endTimestampUTC.date() != endTimestampUTC.date():
+                    endTimestampUTC = endTimestampUTC - datetime.timedelta(seconds=1)
+                    if endTimestampUTC.date() != endTimestampUTC.date():
+                        print('Warning: multi day events not yet supported')
+                        pass
+
+
+                endDateUK = datetime.datetime.combine(event.get('dtend').dt, datetime.datetime.min.time())
+                # Now the date can be localized
+                endDateUK = pytz.timezone("Europe/London").localize(endDateUK, is_dst=None)
+
                 if endDateUK.date() != startDateUK.date():
-                    print('Warning: multi day events not yet supported')
-                    pass
+                    endDateUK = endDateUK - datetime.timedelta(seconds=1)
+                    if endDateUK.date() != startDateUK.date():
+                        print('Warning: multi day events not yet supported')
+                        pass
+            except Exception as e:
+                print('Error parsing event: ' + event.get('uid'))
+                print(e)
+                continue
 
-        new_event ={
-        'uid': event.get('uid'),
-        'startTimestampUTC': event.get('dtstart').dt.astimezone(pytz.utc).isoformat(),
-        'endTimestampUTC': event.get('dtend').dt.astimezone(pytz.utc).isoformat(),
-        'startTimestamp': event.get('dtstart').dt.astimezone(pytz.timezone('Europe/London')).isoformat(),
-        'endTimestamp': event.get('dtend').dt.astimezone(pytz.timezone('Europe/London')).isoformat(),
-        'dateUK': startDateUK.strftime('%Y-%m-%d'),
-        'startTimeUK': startDateUK.strftime('%H:%M'),
-        'endTimeUK': endDateUK.strftime('%H:%M'),
-        'recurring': c[event.get('uid')] > 1,
-        'title': event.get('summary', '').strip(),
-        'description': description.strip(),
-        'location': event.get('location'),
-        'lastModified': event.get('last-modified').dt.isoformat(),
-        'status': event.get('status'),
-        'invitationStatus': partstat,
-        'url': event.get('url'),
-    }
+        try:
+            new_event = {
+            'uid': event.get('uid'),
+            'startTimestampUTC': startTimestampUTC.isoformat(),
+            'endTimestampUTC': endTimestampUTC.isoformat(),
+            'startTimestamp': startDateUK.isoformat(),
+            'endTimestamp': endDateUK.isoformat(),
+            'dateUK': startDateUK.strftime('%Y-%m-%d'),
+            'startTimeUK': startDateUK.strftime('%H:%M'),
+            'endTimeUK': endDateUK.strftime('%H:%M'),
+            'recurring': c[event.get('uid')] > 1,
+            'title': event.get('summary', '').strip(),
+            'description': description.strip(),
+            'location': event.get('location'),
+            'lastModified': event.get('last-modified').dt.isoformat(),
+            'status': event.get('status'),
+            'invitationStatus': partstat,
+            'url': event.get('url'),
+             }
+        except Exception as e:
+            print('Could add event: ' + event.get('uid'))
+            print(e)
+            continue
 
         new_event.update(description_json)
 
