@@ -126,7 +126,7 @@ def main(debug = False):
         except: # all day events
             try:
                 startTimestampUTC = datetime.datetime.combine(event.get('dtstart').dt, datetime.datetime.min.time())
-                startTimestampUTC = pytz.timezone('UTC').localize(startTimestampUTC) # 
+                startTimestampUTC = pytz.timezone('UTC').localize(startTimestampUTC) #
 
 
                 startDateUK = datetime.datetime.combine(event.get('dtstart').dt, datetime.datetime.min.time())
@@ -183,7 +183,7 @@ def main(debug = False):
             'title': event.get('summary', '').strip(),
             'description': description.strip(),
             'location': event.get('location'),
-            'lastModified': event.get('last-modified').dt.isoformat(),
+            'lastModified': event.get('last-modified').dt.isoformat() if event.get('last-modified') is not None else None,
             'status': event.get('status'),
             'invitationStatus': partstat,
             'url': event.get('url'),
