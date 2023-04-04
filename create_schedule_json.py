@@ -53,6 +53,7 @@ def main(debug = False):
     # get recurring events for the next three months
     raw_recurring_events = recurring_ical_events.of(cal, components=["VEVENT"]).between((2022,3,14), datetime.datetime.now(pytz.utc) + datetime.timedelta(days=31))
 
+
     # get ALL events
     raw_events = [e for e in cal.walk()]
 
@@ -64,6 +65,21 @@ def main(debug = False):
 
 
     for event in raw_events:
+
+        try:
+            # check for EXDATE rules in recurring events
+            if 'EXDATE' in event.keys():
+                if isinstance(event['EXDATE'], icalendar.prop.vDDDLists):
+                    exdates = [d.dt for d in event['EXDATE'].dts]
+                elif isinstance(event['EXDATE'], list):
+                    exdates = [d.dts[0].dt for d in event['EXDATE']]
+                if event['DTSTART'].dt in exdates:
+                    continue
+
+
+
+        except:
+            pass
 
         # check whether event is actually an event
         if event.name != 'VEVENT':
