@@ -62,16 +62,16 @@ def parse_show_info(stream_dict):
         pass
 
     try:
-        duration = int(stream_dict['extinfduration'])
+        duration = int(float(stream_dict['extinf_duration']))
     except:
         pass
 
     try:
-        start_timestamp = stream_dict['on_air_timestamp']
+        start_timestamp = int(float(stream_dict['on_air_timestamp']))
 
         if start_timestamp is not None:
-            start_timestamp = int(start_timestamp)
-            start_time_uk = datetime.datetime.fromtimestamp(start_timestamp, tz=pytz.timezone('Europe/London')).strftime('%Y-%m-%d %H:%M:%S')
+            start_timestamp = start_timestamp
+            start_time_uk = datetime.datetime.fromtimestamp(start_timestamp, tz=pytz.timezone('Europe/London'))
 
             if duration is not None:
                 end_time_uk = start_time_uk + datetime.timedelta(seconds=duration)
@@ -85,8 +85,8 @@ def parse_show_info(stream_dict):
     restream['show_url'] = show_url
     restream['show_slug'] = show_slug
     restream['duration'] = duration
-    restream['startTimestampUk'] = start_time_uk
-    restream['endTimestampUk'] = end_time_uk
+    restream['startTimestampUk'] = start_time_uk.isoformat()
+    restream['endTimestampUk'] = end_time_uk.isoformat()
 
     return restream
 
