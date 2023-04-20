@@ -85,8 +85,8 @@ def parse_show_info(stream_dict):
     restream['show_url'] = show_url
     restream['show_slug'] = show_slug
     restream['duration'] = duration
-    restream['startTimestampUk'] = start_time_uk.isoformat()
-    restream['endTimestampUk'] = end_time_uk.isoformat()
+    restream['start_timestamp_uk'] = start_time_uk.isoformat() if start_time_uk is not None else None
+    restream['end_timestamp_uk'] = end_time_uk.isoformat() if end_time_uk is not None else None
 
     return restream
 
