@@ -5,9 +5,10 @@ import requests
 import re
 import sys
 import pytz
+import datetime
 
 
-def parse_title(stream_dict):
+def parse_show_info(stream_dict):
     """
     Parse title
     :param title:
@@ -20,6 +21,10 @@ def parse_title(stream_dict):
     show_date = None
     show_url = None
     show_slug = None
+    duration = None
+    start_time_uk = None
+    end_time_uk = None
+
 
 
     try:
@@ -53,8 +58,23 @@ def parse_title(stream_dict):
             show_title = title_re.group(1)
             show_date = title_re.group(3)
 
+    except:
+        pass
 
-        restream['on_air_timestamp'] = stream_dict['on_air_timestamp']
+    try:
+        duration = int(stream_dict['extinfduration'])
+    except:
+        pass
+
+    try:
+        start_timestamp = stream_dict['on_air_timestamp']
+
+        if start_timestamp is not None:
+            start_timestamp = int(start_timestamp)
+            start_time_uk = datetime.datetime.fromtimestamp(start_timestamp, tz=pytz.timezone('Europe/London')).strftime('%Y-%m-%d %H:%M:%S')
+
+            if duration is not None:
+                end_time_uk = start_time_uk + datetime.timedelta(seconds=duration)
 
     except:
         pass
@@ -64,6 +84,9 @@ def parse_title(stream_dict):
     restream['show_date'] = show_date
     restream['show_url'] = show_url
     restream['show_slug'] = show_slug
+    restream['duration'] = duration
+    restream['startTimestampUk'] = start_time_uk
+    restream['endTimestampUk'] = end_time_uk
 
     return restream
 
@@ -92,7 +115,7 @@ def main(debug = False):
             current = json.load(open(args.input_current, 'rb'))
 
         try:
-            restream['current'] = parse_title(current)
+            restream['current'] = parse_show_info(current)
         except:
             restream['current'] = {}
 
@@ -108,7 +131,7 @@ def main(debug = False):
 
         try:
 
-            restream['next'] = parse_title(current)
+            restream['next'] = parse_show_info(next)
 
         except:
 
