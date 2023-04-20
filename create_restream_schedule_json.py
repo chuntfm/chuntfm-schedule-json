@@ -7,7 +7,65 @@ import sys
 import pytz
 
 
+def parse_title(stream_dict):
+    """
+    Parse title
+    :param title:
+    :return: dict with show_title, show_date, description, url, slug
+    """
 
+    restream = {}
+
+    show_title = None
+    show_date = None
+    show_url = None
+    show_slug = None
+
+
+    try:
+
+        # try to split along commas
+        title_parts = stream_dict['song'].split(',')
+        if len(title_parts) == 3:
+            show_title = title_parts[0]
+            show_url = title_parts[1]
+            show_slug = title_parts[2]
+        else:
+            # split between title and url
+            title_parts = re.split(',\s*(?=http|null)', stream_dict['song'])
+            if len(title_parts) > 1:
+                show_title = title_parts[0]
+
+                re.split(',\s*(?=null|[a-z]+)', title_parts[1])
+
+                if len(title_parts) > 1:
+                    show_url = title_parts[0]
+                    show_slug = title_parts[1]
+
+            else:
+                show_title = stream_dict['song']
+
+        # parse title for date
+
+        title_re = re.search('(.*?)@*\s*(chunt\s*fm)\s*(.*)', show_title.strip(), re.IGNORECASE)
+
+        if title_re is not None:
+            show_title = title_re.group(1)
+            show_date = title_re.group(3)
+
+
+        restream['on_air_timestamp'] = stream_dict['on_air_timestamp']
+
+    except:
+        pass
+
+    restream['show_title'] = show_title.strip()
+    restream['description'] = None
+    restream['show_date'] = show_date
+    restream['show_url'] = show_url
+    restream['show_slug'] = show_slug
+
+    return restream
 
 def main(debug = False):
 
@@ -33,26 +91,11 @@ def main(debug = False):
         else:
             current = json.load(open(args.input_current, 'rb'))
 
-        restream['current'] = dict()
-
         try:
-
-            show_title = current['song']
-            show_date = None
-
-            title_re = re.search('(.*?)@*\s*(chunt\s*fm)\s*(.*)', show_title.strip(), re.IGNORECASE)
-
-            if title_re is not None:
-                show_title = title_re.group(1)
-                show_date = title_re.group(3)
-
-            restream['current']['show_title'] = show_title.strip()
-            restream['current']['description'] = None
-            restream['current']['show_date'] = show_date
-            restream['current']['on_air_timestamp'] = current['on_air_timestamp']
-
+            restream['current'] = parse_title(current)
         except:
-            pass
+            restream['current'] = {}
+
 
 
     if args.input_next is not None:
@@ -65,12 +108,11 @@ def main(debug = False):
 
         try:
 
-            restream['next']['show_title'] = next['song']
-            restream['next']['description'] = None
+            restream['next'] = parse_title(current)
 
         except:
 
-            pass
+            restream['next'] = {}
 
 
     # write out json file
