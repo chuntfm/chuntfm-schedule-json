@@ -5,7 +5,6 @@ import icalendar
 import recurring_ical_events
 import requests
 import re
-import sys
 import pytz
 from collections import Counter
 
@@ -24,28 +23,43 @@ def fix_html(text):
     return text
 
 
+def event_to_ical(event):
+    """
+    Convert an event dictionary to an icalendar Event object
+    :param event: dictionary with event information
+    :return: icalendar Event object
+    """
+
+    ical_event = icalendar.Event()
+
+    ical_event.add('uid', event['uid'])
+    ical_event.add('summary', event['title'])
+    ical_event.add('dtstart', datetime.datetime.fromisoformat(event['startTimestampUTC']))
+    ical_event.add('dtend', datetime.datetime.fromisoformat(event['endTimestampUTC']))
+    ical_event.add('description', event['description'])
+    ical_event.add('last-modified', datetime.datetime.fromisoformat(event['lastModified']) if event['lastModified'] is not None else None)
+    ical_event.add('status', event['status'])
+    ical_event.add('url', event.get('url', 'https://www.chunt.org'))
+
+    return ical_event
+
+def dict_to_ical(schedule):
+
+    cal = icalendar.Calendar()
+
+    for event in schedule:
+        cal.add_component(event_to_ical(event))
+
+    return cal
 
 
 
-def main(debug = False):
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-i','--input', required=not debug, help='Input .ics file (can be url)')
-    parser.add_argument('-o', '--output', required=not debug, help='Output .json file')
-    args = parser.parse_args()
-
-    ## debug
-    if sys.gettrace() is not None:
-        args.input = 'https://calendar.google.com/calendar/ical/chuntfm%40gmail.com/public/basic.ics'
-        args.output = 'schedule.json'
-
+def main(args):
 
     if args.input.startswith('http'):
         cal = icalendar.Calendar.from_ical(requests.get(args.input).text)
     else:
         cal = icalendar.Calendar.from_ical(open(args.input, 'rb').read())
-
-
 
 
     events = []
@@ -144,7 +158,6 @@ def main(debug = False):
                 startTimestampUTC = datetime.datetime.combine(event.get('dtstart').dt, datetime.datetime.min.time())
                 startTimestampUTC = pytz.timezone('UTC').localize(startTimestampUTC) #
 
-
                 startDateUK = datetime.datetime.combine(event.get('dtstart').dt, datetime.datetime.min.time())
                 startDateUK = pytz.timezone("Europe/London").localize(startDateUK, is_dst=None)
             except Exception as e:
@@ -213,15 +226,24 @@ def main(debug = False):
 
         events.append(new_event)
 
-
     # sort by startTimestamp descending
     events = sorted(events, key=lambda k: k['startTimestamp'], reverse=False)
 
     with open(args.output, 'w') as f:
         json.dump(events, f, indent=4)
 
+    if args.ics:
+        cal = dict_to_ical(events)
+
+        with open(args.output.replace('.json', '.ics'), 'wb') as f:
+            f.write(cal.to_ical())
+
 if __name__ == '__main__':
-    if sys.gettrace() is not None:
-        main(debug=True)
-    else:
-        main()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i','--input', required=True, help='Input .ics file (can be url)')
+    parser.add_argument('-o', '--output', required=True, help='Output .json file')
+    parser.add_argument('--ics', help='Output a cleaned up .ics file as well', action='store_true')
+    args = parser.parse_args()
+
+    main(args)
