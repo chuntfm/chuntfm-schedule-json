@@ -39,7 +39,7 @@ def event_to_ical(event):
     ical_event.add('description', event['description'])
     ical_event.add('last-modified', datetime.datetime.fromisoformat(event['lastModified']) if event['lastModified'] is not None else None)
     ical_event.add('status', event['status'])
-    ical_event.add('url', event.get('url', 'https://www.chunt.org'))
+    ical_event.add('url', event.get('url', 'https://www.chunt.org') if event.get('url') is not None else 'https://www.chunt.org')
 
     return ical_event
 
