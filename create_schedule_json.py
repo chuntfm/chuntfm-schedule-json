@@ -7,6 +7,8 @@ import requests
 import re
 import pytz
 from collections import Counter
+import sqlite3
+import pandas as pd
 
 def remove_html_tags(text):
     """Remove html tags from a string"""
@@ -51,6 +53,20 @@ def dict_to_ical(schedule):
         cal.add_component(event_to_ical(event))
 
     return cal
+
+def dict_to_sqlite(schedule, output_file):
+
+    # for convenience, parse the dictionary to a pandas dataframe
+    df = pd.DataFrame.from_records(schedule)
+
+    # convert event column to str
+    df['event'] = df['event'].apply(lambda x: str(x) if pd.notna(x) else x)
+
+    # change event column type to string
+    df['event'] = df['event'].astype(str)
+
+    # write to disk
+    df.to_sql(output_file, sqlite3.connect(output_file), if_exists='replace', index=False)
 
 
 
@@ -238,12 +254,18 @@ def main(args):
         with open(args.output.replace('.json', '.ics'), 'wb') as f:
             f.write(cal.to_ical())
 
+    if args.sqlite:
+
+        dict_to_sqlite(events, args.output.replace('.json', '.sqlite'))
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-i','--input', required=True, help='Input .ics file (can be url)')
     parser.add_argument('-o', '--output', required=True, help='Output .json file')
     parser.add_argument('--ics', help='Output a cleaned up .ics file as well', action='store_true')
+    parser.add_argument('--sqlite', help='Output a sqlite database file as well', action='store_true')
+
     args = parser.parse_args()
 
     main(args)
