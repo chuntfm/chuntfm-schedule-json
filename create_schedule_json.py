@@ -9,6 +9,7 @@ import pytz
 from collections import Counter
 import sqlite3
 import pandas as pd
+import json
 
 def remove_html_tags(text):
     """Remove html tags from a string"""
@@ -59,14 +60,21 @@ def dict_to_sqlite(schedule, output_file):
     # for convenience, parse the dictionary to a pandas dataframe
     df = pd.DataFrame.from_records(schedule)
 
-    # convert event column to str
-    df['event'] = df['event'].apply(lambda x: str(x) if pd.notna(x) else x)
+    # Iterate over DataFrame columns
+    for col in df.columns:
+        # Check if the column dtype is 'O'
+        if df[col].dtype == 'O':
+            # Apply the operation to the column
 
-    # change event column type to string
-    df['event'] = df['event'].astype(str)
+            df[col] = df[col].apply(
+                lambda x: json.dumps(x) if pd.notna(x) and isinstance(x, list) else str(x) if pd.notna(x) else x)
+            df[col] = df[col].astype(str)
+
+    # Replace 'nan' strings with None
+    df.replace('nan', None, inplace=True)
 
     # write to disk
-    df.to_sql(output_file, sqlite3.connect(output_file), if_exists='replace', index=False)
+    df.to_sql('schedule', sqlite3.connect(output_file), if_exists='replace', index=False)
 
 
 
@@ -83,6 +91,9 @@ def main(args):
     # get recurring events for the next three months
     raw_recurring_events = recurring_ical_events.of(cal, components=["VEVENT"]).between((2022,3,14), datetime.datetime.now(pytz.utc) + datetime.timedelta(days=31))
 
+    # grouped by uid, add a running id to the uid
+
+
 
     # get ALL events
     raw_events = [e for e in cal.walk()]
@@ -90,8 +101,12 @@ def main(args):
     # count UIDs occurences in raw_events
     c = Counter([e['UID'] for e in raw_recurring_events if 'UID' in e.keys()])
 
+    # count modified uids
+    c_uid_mod = Counter()
+
     # non-recurring events without constraint + recurring events 3 months into to the future
     raw_events = [e for e in raw_events if 'UID' in e.keys() and c[e['UID']] <= 1] + [e for e in raw_recurring_events if 'UID' in e.keys() and c[e['UID']] > 1]
+
 
 
     for event in raw_events:
@@ -105,8 +120,6 @@ def main(args):
                     exdates = [d.dts[0].dt for d in event['EXDATE']]
                 if event['DTSTART'].dt in exdates:
                     continue
-
-
 
         except:
             pass
@@ -214,9 +227,18 @@ def main(args):
                 print(e)
                 continue
 
+        if event.get('uid') in c.keys() and c[event.get('uid')] > 1:
+
+            c_uid_mod.update([event.get('uid')])
+            uid = event.get('uid') + '-' + str(c_uid_mod[event.get('uid')])
+
+        else:
+            uid = event.get('uid')
+
+
         try:
             new_event = {
-            'uid': event.get('uid'),
+            'uid': uid,
             'startTimestampUTC': startTimestampUTC.isoformat(),
             'endTimestampUTC': endTimestampUTC.isoformat(),
             'startTimestamp': startDateUK.isoformat(),
