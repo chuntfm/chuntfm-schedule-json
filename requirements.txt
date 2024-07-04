@@ -9,3 +9,4 @@ six==1.16.0
 urllib3==1.26.12
 recurring_ical_events
 pandas
+numpy
