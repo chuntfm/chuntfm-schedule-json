@@ -3,7 +3,6 @@ import json
 import icalendar
 import requests
 import re
-import sys
 import pytz
 import datetime
 
@@ -99,11 +98,6 @@ def main(debug = False):
 
     args = parser.parse_args()
 
-    ## debug
-    if sys.gettrace() is not None:
-        args.input_current = 'http://116.203.52.102/cfm-fallback/current.json'
-        args.input_next = 'http://116.203.52.102/cfm-fallback/next.json'
-
 
     restream = {'current': None,
                 'next': None}
@@ -143,7 +137,5 @@ def main(debug = False):
         json.dump(restream, f, indent=4)
 
 if __name__ == '__main__':
-    if sys.gettrace() is not None:
-        main(debug=True)
-    else:
+
         main()
