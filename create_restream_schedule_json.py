@@ -117,9 +117,15 @@ def main(debug = False):
 
     if args.input_next is not None:
         if args.input_next.startswith('http'):
-            next = requests.get(args.input_next).json()
+            try:
+                next = requests.get(args.input_next).json()
+            except:
+                next = None
         else:
-            next = json.load(open(args.input_next, 'rb'))
+            try:
+                next = json.load(open(args.input_next, 'rb'))
+            except:
+                next = None
 
         restream['next'] = dict()
 
