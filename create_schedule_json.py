@@ -104,8 +104,8 @@ def main(args):
     # count modified uids
     c_uid_mod = Counter()
 
-    # non-recurring events without constraint + recurring events 3 months into to the future
-    raw_events = [e for e in raw_events if 'UID' in e.keys() and c[e['UID']] <= 1] + [e for e in raw_recurring_events if 'UID' in e.keys() and c[e['UID']] > 1]
+    # Non-recurring events without those already in recurring events + recurring events
+    raw_events = [e for e in raw_events if 'UID' in e.keys() and c[e['UID']] == 0] + [e for e in raw_recurring_events if 'UID' in e.keys() and c[e['UID']] > 0]
 
 
 
@@ -118,6 +118,7 @@ def main(args):
                     exdates = [d.dt for d in event['EXDATE'].dts]
                 elif isinstance(event['EXDATE'], list):
                     exdates = [d.dts[0].dt for d in event['EXDATE']]
+
                 if event['DTSTART'].dt in exdates:
                     continue
 
