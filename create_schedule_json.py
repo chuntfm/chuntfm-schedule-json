@@ -79,26 +79,17 @@ def dict_to_ical(schedule):
 
 def dict_to_sqlite(schedule, output_file):
 
-    # for convenience, parse the dictionary to a pandas dataframe
-    df = pd.DataFrame.from_records(schedule)
-
-    # Iterate over DataFrame columns
-    for col in df.columns:
-        # Check if the column dtype is 'O'
-        if df[col].dtype == "O":
-            # Apply the operation to the column
-
-            df[col] = df[col].apply(
-                lambda x: (
-                    json.dumps(x)
-                    if pd.notna(x) and isinstance(x, list)
-                    else str(x) if pd.notna(x) else x
-                )
-            )
-            df[col] = df[col].astype(str)
-
-    # Replace 'nan' strings with None
-    df.replace("nan", None, inplace=True)
+    # Create simplified table with start, stop, and data columns
+    simplified_data = []
+    
+    for event in schedule:
+        simplified_data.append({
+            'start': event.get('startTimestampUTC'),
+            'stop': event.get('endTimestampUTC'),
+            'data': json.dumps(event)
+        })
+    
+    df = pd.DataFrame(simplified_data)
 
     # write to disk
     df.to_sql(
