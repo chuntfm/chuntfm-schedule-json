@@ -79,11 +79,12 @@ def dict_to_ical(schedule):
 
 def dict_to_sqlite(schedule, output_file):
 
-    # Create simplified table with start, stop, and data columns
+    # Create simplified table with id, start, stop, and data columns
     simplified_data = []
     
     for event in schedule:
         simplified_data.append({
+            'id': event.get('uid'),
             'start': event.get('startTimestampUTC'),
             'stop': event.get('endTimestampUTC'),
             'data': json.dumps(event)
