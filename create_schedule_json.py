@@ -12,6 +12,8 @@ import pandas as pd
 import json
 import os
 import uuid
+import hashlib
+import hmac
 
 
 def remove_html_tags(text):
@@ -333,6 +335,29 @@ def main(args):
         # we've collected and sorted all events so numbering is stable.
         uid = event.get("uid")
 
+        # Extract organizer information
+        organizer = None
+        if event.get("organizer"):
+            try:
+                organizer_prop = event.get("organizer")
+                # Extract and clean email from organizer property
+                organizer_email = str(organizer_prop).replace("MAILTO:", "").replace("mailto:", "").strip().lower()
+                
+                if organizer_email:
+                    if args.plaintext_organizer:
+                        organizer = organizer_email
+                    elif args.organizer_key:
+                        # Use HMAC-SHA256 with user-provided key
+                        organizer = hmac.new(
+                            args.organizer_key.encode(), 
+                            organizer_email.encode(), 
+                            hashlib.sha256
+                        ).hexdigest()
+                    else:
+                        organizer = None  # No hashing without key for security
+            except Exception:
+                organizer = None
+
         try:
             new_event = {
                 "uid": uid,
@@ -355,6 +380,7 @@ def main(args):
                 "status": event.get("status"),
                 "invitationStatus": partstat,
                 "url": event.get("url"),
+                "organizer": organizer,
             }
         except Exception as e:
             print("Could add event: " + event.get("uid"))
@@ -441,7 +467,17 @@ if __name__ == "__main__":
     parser.add_argument(
         "--sqlite", help="Output a sqlite database file as well", action="store_true"
     )
+    parser.add_argument(
+        "--plaintext-organizer", help="Keep organizer email in plaintext instead of hashed", action="store_true"
+    )
+    parser.add_argument(
+        "--organizer-key", help="Secret key for HMAC-SHA256 hashing of organizer emails (required for hashing)", type=str
+    )
 
     args = parser.parse_args()
+
+    # Validate organizer arguments
+    if not args.plaintext_organizer and not args.organizer_key:
+        parser.error("--organizer-key is required when --plaintext-organizer is not set. Either provide a key for secure hashing or use --plaintext-organizer.")
 
     main(args)
