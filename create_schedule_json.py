@@ -73,6 +73,14 @@ def dict_to_ical(schedule):
 
     cal = icalendar.Calendar()
 
+    cal.add("prodid", "-//ChuntFM//Schedule//EN")
+    cal.add("version", "2.0")
+    cal.add("calscale", "GREGORIAN")
+    cal.add("x-wr-calname", "ChuntFM Schedule")
+    cal.add("x-wr-timezone", "UTC")
+    cal.add("refresh-interval;value=duration", "PT1H")
+    cal.add("x-published-ttl", "PT1H")
+
     for event in schedule:
         cal.add_component(event_to_ical(event))
 
